@@ -1,5 +1,21 @@
 import math
 
+# Colors
+colors = [(50, 50, 50),(255, 255, 255),(255, 0, 0),(0, 0, 255),(0, 255, 0),(255, 255, 0)]
+
+# colors = {
+# "GRAY" : (50, 50, 50),
+# "WHITE" : (255, 255, 255),
+# "RED" : (255, 0, 0),
+# "BLUE" : (0, 0, 255),
+# "GREEN" : (0, 255, 0),
+# "YELLOW" : (255, 255, 0),
+#}
+
+class Route:
+    def __init__(self, waypoints):
+        self.waypoints = waypoints
+
 def arc_points(start, end, num_points=5, flip=False):
     """
     Generate points on an arc between two points, flipping the arc across the joining line if needed.
@@ -76,6 +92,8 @@ def arc_points(start, end, num_points=5, flip=False):
 
 def draw_arc (start, end, form) :
 
+    # print(start, end)
+
     if form == 'tr' : 
         arc = arc_points(end, start, 15, False)
         arc.reverse()
@@ -83,23 +101,31 @@ def draw_arc (start, end, form) :
     elif form == 'tl': 
         arc = arc_points(start, end, 15, False)
 
+    elif form == 'rt' :
+        arc = arc_points(start, end, 15, False)
 
+    elif form == 'lt' :
+        arc = arc_points(end, start, 15, False)
+        arc.reverse()
 
     return arc
 
 def breakpoint_to_path (breakpoints, arc_form) : 
-    for i in breakpoints : 
-        path = [i[0]]
-        path.extend(draw_arc(i[1],i[2],arc_form))
-        path.append(i[3])
+    # for i in breakpoints : 
+    # print(i)
+    path = [breakpoints[0]]
+    path.extend(draw_arc(breakpoints[1],breakpoints[2],arc_form))
+    path.append(breakpoints[3])
 
-        print(f"Route({path}),")
+    return Route(path)
 
-def get_breakpoints (path_points, s0 : str, s1 : str) :
+    # return path
+
+def get_breakpoints (path_points, s0 : str, s1 : str, num_lanes : int = 3) :
     
     breaks = []
 
-    for i in range(0,300,100) :
+    for i in range(0,num_lanes * 100,100) :
 
         tup_form_1 = lambda tup : (tup[0] + i, tup[1]) 
         tup_form_2 = lambda tup : (tup[0] - i, tup[1]) 
@@ -130,16 +156,3 @@ def get_breakpoints (path_points, s0 : str, s1 : str) :
         
     return breaks
     
-
-initial_breakpoints = [
-    ([(1010,0),(1010,480),(1260,730),(1920,730)], '+0', '-1'),    # tl
-    ([(1010,0),(1010,480),(660,830),(0,830)], '+0', '+1'),    # tr
-    # ([(1920,830),(1260,830),(660,830),(0,830)], '+', '+'),    # rl
-    ([(1920,830),(1260,830),(910,480),(910,0)], '+1', '-0'),    # rt
-    ([(0,1030),(660,1030),(910,480),(910,0)], '-1', '-0'),    # lt
-    # ([(1920,830),(1260,830),(910,480),(910,0)], '+1', '-0'),    # lr
-]
-
-for i_bp in initial_breakpoints : 
-    breakpoints = get_breakpoints(i_bp[0], i_bp[1], i_bp[2])
-    paths = [breakpoint_to_path(bp) for bp in breakpoints]
