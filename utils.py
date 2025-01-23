@@ -19,8 +19,6 @@ def arc_points(start, end, num_points=5, flip=False):
 
     radius = abs(x1-x2)
 
-    end, start = start, end
-
     # Midpoint of the line segment
     mx, my = (x1 + x2) / 2, (y1 + y2) / 2
 
@@ -68,41 +66,80 @@ def arc_points(start, end, num_points=5, flip=False):
     angle_step = (end_angle - start_angle) / (num_points - 1)
     points = [
         (
-            cx + radius * math.cos(start_angle + i * angle_step),
-            cy + radius * math.sin(start_angle + i * angle_step)
+            round(cx + radius * math.cos(start_angle + i * angle_step), 2),
+            round(cy + radius * math.sin(start_angle + i * angle_step), 2)
         )
         for i in range(num_points)
     ]
 
     return points
 
-# # Example usage
-# start = (1210, 480)
-# end = (1260,530)
+def draw_arc (start, end, form) :
 
-# start, end = end, start
+    if form == 'tr' : 
+        arc = arc_points(end, start, 15, False)
+        arc.reverse()
 
-
-# # Original arc
-# print("Original Arc:")
-# arc1 = arc_points(start, end, radius)
-# print(list(reversed(arc1)))
-
-
-# # Flipped arc
-# print("\nFlipped Arc:")
-# arc2 = arc_points(start, end, radius, flip=True)
-# print(arc2)
+    elif form == 'tl': 
+        arc = arc_points(start, end, 15, False)
 
 
 
+    return arc
 
+def breakpoint_to_path (breakpoints, arc_form) : 
+    for i in breakpoints : 
+        path = [i[0]]
+        path.extend(draw_arc(i[1],i[2],arc_form))
+        path.append(i[3])
 
-def draw_path (start_point : tuple, end_point : tuple) : 
+        print(f"Route({path}),")
+
+def get_breakpoints (path_points, s0 : str, s1 : str) :
     
-    if start_point == end_point : return 0
-    if not start_point or not end_point : return -1
+    breaks = []
 
-    draw_line ()
-    draw_arc ()
-    draw_line ()
+    for i in range(0,300,100) :
+
+        tup_form_1 = lambda tup : (tup[0] + i, tup[1]) 
+        tup_form_2 = lambda tup : (tup[0] - i, tup[1]) 
+        tup_form_3 = lambda tup : (tup[0], tup[1] + i) 
+        tup_form_4 = lambda tup : (tup[0], tup[1] - i) 
+
+        def update_tup (tup, mod) :
+
+            if mod[0] == "+" : 
+                if mod[1] == '0' :
+                    tup = tup_form_1(tup)
+                if mod[1] == '1' :
+                    tup = tup_form_3(tup)
+
+            elif mod[0] == "-" : 
+                if mod[1] == '0' :
+                    tup = tup_form_2(tup)
+                if mod[1] == '1' :
+                    tup = tup_form_4(tup)
+            else :
+                raise ValueError
+
+            # print(tup, mod)
+            return tup
+        
+        breaks.append([update_tup(tup, s0 if idx < 2 else s1) for idx, tup in enumerate(path_points)])
+        
+        
+    return breaks
+    
+
+initial_breakpoints = [
+    ([(1010,0),(1010,480),(1260,730),(1920,730)], '+0', '-1'),    # tl
+    ([(1010,0),(1010,480),(660,830),(0,830)], '+0', '+1'),    # tr
+    # ([(1920,830),(1260,830),(660,830),(0,830)], '+', '+'),    # rl
+    ([(1920,830),(1260,830),(910,480),(910,0)], '+1', '-0'),    # rt
+    ([(0,1030),(660,1030),(910,480),(910,0)], '-1', '-0'),    # lt
+    # ([(1920,830),(1260,830),(910,480),(910,0)], '+1', '-0'),    # lr
+]
+
+for i_bp in initial_breakpoints : 
+    breakpoints = get_breakpoints(i_bp[0], i_bp[1], i_bp[2])
+    paths = [breakpoint_to_path(bp) for bp in breakpoints]

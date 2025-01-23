@@ -1,6 +1,6 @@
 import pygame
 
-GRAY = (50, 50, 50)
+GRAY = (18, 18, 18)
 WHITE = (255, 255, 255)
 
 def draw_dashed_line(screen, color, start_pos, end_pos, dash_length=10):
